@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Gamezone - Gun Battle</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101820;color:white;font-family:Arial;overflow:hidden;touch-action:none}
+#game{display:block;width:100vw;height:100dvh;background:#243b2d}
+#hud{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
+.panel{background:#07130ddd;padding:10px 13px;border:1px solid #6c9b65;border-radius:10px;font-weight:bold}
+#message{position:absolute;top:42%;width:100%;text-align:center;font-size:25px;font-weight:bold;text-shadow:2px 2px #000;pointer-events:none}
+#controls{position:absolute;bottom:18px;left:0;right:0;display:flex;justify-content:space-between;align-items:end;padding:0 18px}
+#joy{width:125px;height:125px;border-radius:50%;background:#ffffff25;border:2px solid #ffffff80;position:relative;touch-action:none}
+#stick{position:absolute;width:48px;height:48px;border-radius:50%;background:#cde6cfbb;left:36px;top:36px}
+#shoot{width:92px;height:92px;border-radius:50%;border:3px solid white;background:#d83a30dd;color:white;font-weight:bold;font-size:17px;touch-action:none}
+#restart{position:absolute;top:55%;left:50%;transform:translateX(-50%);padding:12px 25px;border:0;border-radius:10px;background:#f0c744;font-weight:bold;display:none}
+#help{position:absolute;bottom:150px;left:15px;color:#fff9;font-size:12px}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+ <div class="panel">❤️ HP: <span id="hp">100</span></div>
+ <div class="panel">🎯 Score: <span id="score">0</span></div>
+ <div class="panel">🔫 Ammo: <span id="ammo">∞</span></div>
+</div>
+<div id="message">GAMEZONE<br><small>Get ready!</small></div>
+<button id="restart">PLAY AGAIN</button>
+<div id="help">Left pad: Move · Right button: Shoot</div>
+<div id="controls">
+ <div id="joy"><div id="stick"></div></div>
+ <button id="shoot">FIRE 🔥</button>
+</div>
+<script>
+(() => {
+const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
+const hpEl=document.getElementById("hp"),scoreEl=document.getElementById("score");
+const message=document.getElementById("message"),restart=document.getElementById("restart");
+let W=0,H=0,player,bullets,enemies,trees,score,hp,over,lastShot=0,spawnTimer=0;
+let keys={},joy={x:0,y:0},shooting=false,lastTime=0;
+function resize(){
+ W=canvas.width=innerWidth*devicePixelRatio;
+ H=canvas.height=innerHeight*devicePixelRatio;
+ ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+ W=innerWidth;H=innerHeight;
+ if(!player)reset();
+}
+function reset(){
+ player={x:W/2,y:H/2,r:15,angle:0,speed:220};
+ bullets=[];enemies=[];score=0;hp=100;over=false;spawnTimer=0;lastShot=0;
+ trees=[];
+ for(let i=0;i<55;i++)trees.push({x:Math.random()*W,y:Math.random()*H,r:10+Math.random()*17});
+ hpEl.textContent=hp;scoreEl.textContent=score;
+ message.style.display="none";restart.style.display="none";
+}
+function circle(x,y,r,color){
+ ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+}
+function drawWorld(){
+ ctx.fillStyle="#34563b";ctx.fillRect(0,0,W,H);
+ ctx.strokeStyle="#ffffff0b";ctx.lineWidth=1;
+ for(let x=0;x<W;x+=42){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+ for(let y=0;y<H;y+=42){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+ trees.forEach(t=>{
+ circle(t.x,t.y,t.r+3,"#493b2b");circle(t.x,t.y,t.r,"#1c482a");
+ circle(t.x-t.r*.25,t.y-t.r*.3,t.r*.45,"#2f6738");
+ });
+}
+function drawPlayer(){
+ ctx.save();ctx.translate(player.x,player.y);ctx.rotate(player.angle);
+ circle(0,0,player.r,"#f2c7a5");
+ circle(0,0,player.r-5,"#337bd0");
+ ctx.fillStyle="#252b31";ctx.fillRect(5,-5,23,10);
+ ctx.fillStyle="#111";ctx.fillRect(18,-3,15,6);
+ ctx.restore();
+}
+function drawEnemy(e){
+ ctx.save();ctx.translate(e.x,e.y);
+ circle(0,0,e.r,"#a82e35");
+ circle(0,-3,e.r*.53,"#e3aa7e");
+ ctx.fillStyle="#222";ctx.fillRect(-e.r*.65,e.r*.45,e.r*1.3,5);
+ ctx.restore();
+}
+function fire(){
+ if(over||performance.now()-lastShot<190)return;
+ lastShot=performance.now();
+ bullets.push({x:player.x+Math.cos(player.angle)*23,y:player.y+Math.sin(player.angle)*23,
+ vx:Math.cos(player.angle)*560,vy:Math.sin(player.angle)*560,life:1.3});
+}
+function spawnEnemy(){
+ let side=Math.floor(Math.random()*4),x,y;
+ if(side===0){x=Math.random()*W;y=-20}
+ if(side===1){x=W+20;y=Math.random()*H}
+ if(side===2){x=Math.random()*W;y=H+20}
+ if(side===3){x=-20;y=Math.random()*H}
+ enemies.push({x,y,r:14,speed:45+Math.random()*28});
+}
+function update(dt){
+ if(over)return;
+ let mx=joy.x+(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0);
+ let my=joy.y+(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0);
+ let len=Math.hypot(mx,my);if(len>1){mx/=len;my/=len}
+ player.x=Math.max(16,Math.min(W-16,player.x+mx*player.speed*dt));
+ player.y=Math.max(35,Math.min(H-16,player.y+my*player.speed*dt));
+ if(len>.1)player.angle=Math.atan2(my,mx);
+ if(shooting)fire();
+ spawnTimer+=dt;
+ if(spawnTimer>1.25){spawnTimer=0;spawnEnemy()}
+ bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt});
+ bullets=bullets.filter(b=>b.life>0&&b.x>-10&&b.x<W+10&&b.y>-10&&b.y<H+10);
+ enemies.forEach(e=>{
+ let dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;
+ e.x+=dx/d*e.speed*dt;e.y+=dy/d*e.speed*dt;
+ if(d<e.r+player.r){hp-=18*dt;hpEl.textContent=Math.max(0,Math.ceil(hp))}
+ });
+ for(let i=enemies.length-1;i>=0;i--){
+ let e=enemies[i],hit=false;
+ for(let j=bullets.length-1;j>=0;j--){
+ let b=bullets[j];
+ if(Math.hypot(e.x-b.x,e.y-b.y)<e.r+4){
+ bullets.splice(j,1);hit=true;break;
+ }
+ }
+ if(hit){enemies.splice(i,1);score+=10;scoreEl.textContent=score}
+ }
+ if(hp<=0){
+ over=true;message.innerHTML="GAME OVER<br><small>Score: "+score+"</small>";
+ message.style.display="block";restart.style.display="block";
+ }
+}
+function render(){
+ drawWorld();
+ bullets.forEach(b=>circle(b.x,b.y,4,"#ffd54a"));
+ enemies.forEach(drawEnemy);drawPlayer();
+}
+function loop(t){
+ let dt=Math.min((t-lastTime)/1000||0,0.035);lastTime=t;
+ update(dt);render();requestAnimationFrame(loop);
+}
+const joyEl=document.getElementById("joy"),stick=document.getElementById("stick");
+let joyId=null;
+function moveJoy(e){
+ let r=joyEl.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+ let dx=e.clientX-cx,dy=e.clientY-cy,max=37,d=Math.hypot(dx,dy);
+ if(d>max){dx=dx/d*max;dy=dy/d*max}
+ joy.x=dx/max;joy.y=dy/max;
+ stick.style.left=(36+dx)+"px";stick.style.top=(36+dy)+"px";
+}
+joyEl.addEventListener("pointerdown",e=>{joyId=e.pointerId;joyEl.setPointerCapture(joyId);moveJoy(e)});
+joyEl.addEventListener("pointermove",e=>{if(e.pointerId===joyId)moveJoy(e)});
+function releaseJoy(){joyId=null;joy.x=joy.y=0;stick.style.left="36px";stick.style.top="36px"}
+joyEl.addEventListener("pointerup",releaseJoy);joyEl.addEventListener("pointercancel",releaseJoy);
+const shootBtn=document.getElementById("shoot");
+shootBtn.addEventListener("pointerdown",e=>{e.preventDefault();shooting=true;fire()});
+["pointerup","pointercancel","pointerleave"].forEach(ev=>shootBtn.addEventListener(ev,()=>shooting=false));
+addEventListener("keydown",e=>{keys[e.key]=true;if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();if(e.key===" ")fire()});
+addEventListener("keyup",e=>keys[e.key]=false);
+restart.addEventListener("click",reset);
+addEventListener("resize",resize);
+resize();reset();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
