@@ -46,6 +46,33 @@ c.style.display=c.innerText.toLowerCase().includes(q)?'block':'none';
 });
 }
 </script>
+  <div id="supabase-games"></div>
+
+<script>
+async function showGames() {
+  const { data, error } = await supabaseClient
+    .from("Game")
+    .select("id, name, description, category, image_url");
+
+  const container = document.getElementById("supabase-games");
+
+  if (error) {
+    container.textContent = "Games load nahi hue.";
+    console.error(error);
+    return;
+  }
+
+  container.innerHTML = data.map(game => `
+    <div style="background:#222;color:white;padding:15px;margin:10px;border-radius:10px">
+      <h3>${game.name ?? ""}</h3>
+      <p>${game.description ?? ""}</p>
+      <p>Category: ${game.category ?? ""}</p>
+    </div>
+  `).join("");
+}
+
+showGames();
+</script>
 </body>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
