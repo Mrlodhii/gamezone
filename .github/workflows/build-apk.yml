@@ -1,0 +1,24 @@
+
+name: Build Gamezone APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get Gamezone files
+        uses: actions/checkout@v3
+
+      - name: Build Android APK
+        uses: cemcoe/web-to-apk-action@v1
+        with:
+          app_name: "Gamezone"
+          app_id: "com.mrlodhii.gamezone"
+          build_command: "echo Static Gamezone website"
+          web_dir: "."
