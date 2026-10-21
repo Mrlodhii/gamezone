@@ -47,6 +47,31 @@ c.style.display=c.innerText.toLowerCase().includes(q)?'block':'none';
 }
 </script>
 </body>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = https://piruzvmqftjksjrnkvhb.supabase.co/rest/v1/
+const SUPABASE_KEY = sb_publishable_01DcZheYmg7UCsQdDmXMdQ_mRXAtrus
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+async function loadGames() {
+  const { data, error } = await supabaseClient
+    .from("Game")
+    .select("*");
+
+  if (error) {
+    console.error("Games load nahi hue:", error.message);
+    return;
+  }
+
+  console.log("Game data:", data);
+}
+
+loadGames();
+  </script>
 </html>
 
 
