@@ -3,102 +3,95 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gamezone</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gamezone Racing</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#0b1020;color:white;font-family:Arial,sans-serif}
-header{padding:22px 16px;background:#151d33;color:#56ffbd;font-size:27px;font-weight:bold;text-align:center}
-.hero{text-align:center;padding:35px 16px 20px}
-.hero h1{font-size:32px;margin:8px 0}
-.hero p{color:#b8c4d9}
-input{width:90%;max-width:420px;padding:14px;border-radius:10px;border:1px solid #35415d;background:#171f35;color:white;font-size:16px}
-h2{text-align:center;margin-top:28px}
-.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:14px;padding:16px;max-width:700px;margin:auto}
-.card{background:#19233b;border:1px solid #2b3958;border-radius:14px;padding:20px 10px;text-align:center}
-.emoji{font-size:42px}
-.card h3{margin:12px 0}
-button{background:#56ffbd;border:0;border-radius:8px;padding:11px 16px;font-weight:bold;cursor:pointer}
-footer{text-align:center;padding:25px;color:#9caac4}
+body{margin:0;background:#101820;color:white;font-family:Arial;text-align:center}
+h1{color:#00f5a0;margin:12px}
+#score{font-size:22px;margin:8px}
+#road{position:relative;width:280px;height:60vh;min-height:360px;max-height:520px;margin:12px auto;background:#444;border-left:8px solid white;border-right:8px solid white;overflow:hidden}
+.line{position:absolute;left:48%;width:6px;height:55px;background:white;animation:move .65s linear infinite}
+@keyframes move{from{top:-60px}to{top:100%}}
+.car{position:absolute;width:38px;height:64px;border-radius:9px}
+#player{bottom:14px;left:calc(50% - 19px);background:#00f5a0;border:3px solid white}
+.enemy{top:-70px;background:#ff4757;border:3px solid white}
+button{background:#00f5a0;border:0;border-radius:10px;padding:14px 24px;margin:8px;font-size:18px;font-weight:bold}
+#message{font-size:20px;margin:10px}
 </style>
 </head>
 <body>
-<header>🎮 GAMEZONE</header>
-<section class="hero">
-<h1>Play. Explore. Enjoy.</h1>
-<p>Your gaming world starts here!</p>
-<input id="search" placeholder="🔎 Search games..." oninput="searchGames()">
-</section>
-<h2>🔥 Explore Games</h2>
-<section class="games" id="games">
-<div class="card"><div class="emoji">🏎️</div><h3>Racing</h3><button onclick="showInfo('Racing')">Explore</button></div>
-<div class="card"><div class="emoji">🧩</div><h3>Puzzle</h3><button onclick="showInfo('Puzzle')">Explore</button></div>
-<div class="card"><div class="emoji">🏏</div><h3>Sports</h3><button onclick="showInfo('Sports')">Explore</button></div>
-<div class="card"><div class="emoji">🚀</div><h3>Adventure</h3><button onclick="showInfo('Adventure')">Explore</button></div>
-</section>
-<footer>© 2026 Gamezone | Have fun!</footer>
+<h1>🏎️ GAMEZONE</h1>
+<div id="score">Score: 0</div>
+<div id="road">
+<div class="line" style="left:33%"></div>
+<div class="line" style="left:66%;animation-delay:-.3s"></div>
+<div id="player" class="car"></div>
+</div>
+<div id="message">Avoid the red cars!</div>
+<div>
+<button id="left">⬅ LEFT</button>
+<button id="right">RIGHT ➡</button>
+</div>
+<button id="start">START / RESTART</button>
 <script>
-function showInfo(name){alert(name+' games coming soon!')}
-function searchGames(){
-let q=document.getElementById('search').value.toLowerCase();
-document.querySelectorAll('.card').forEach(c=>{
-c.style.display=c.innerText.toLowerCase().includes(q)?'block':'none';
+const road=document.getElementById('road');
+const player=document.getElementById('player');
+const scoreBox=document.getElementById('score');
+const message=document.getElementById('message');
+let x=121,score=0,running=false,raf=0,last=0,spawn=0,enemies=[];
+function move(d){
+ if(!running)return;
+ x=Math.max(8,Math.min(road.clientWidth-54,x+d*24));
+ player.style.left=x+'px';
+}
+document.getElementById('left').onclick=()=>move(-1);
+document.getElementById('right').onclick=()=>move(1);
+document.addEventListener('keydown',e=>{
+ if(e.key==='ArrowLeft')move(-1);
+ if(e.key==='ArrowRight')move(1);
 });
+function endGame(){
+ running=false;
+ cancelAnimationFrame(raf);
+ message.textContent='💥 Game Over! Tap Restart to play again.';
 }
-</script>
-  <div id="supabase-games"></div>
-
-<script>
-async function showGames() {
-  const { data, error } = await supabaseClient
-    .from("Game")
-    .select("id, name, description, category, image_url");
-
-  const container = document.getElementById("supabase-games");
-
-  if (error) {
-    container.textContent = "Games load nahi hue.";
-    console.error(error);
-    return;
+function start(){
+ cancelAnimationFrame(raf);
+ enemies.forEach(e=>e.el.remove());
+ enemies=[];
+ score=0;x=(road.clientWidth-38)/2;
+ player.style.left=x+'px';
+ scoreBox.textContent='Score: 0';
+ message.textContent='Race started! Avoid red cars!';
+ running=true;last=performance.now();spawn=0;
+ raf=requestAnimationFrame(loop);
+}
+function loop(t){
+ if(!running)return;
+ const dt=Math.min((t-last)/16,2);last=t;spawn+=dt;
+ if(spawn>55){
+  spawn=0;
+  const el=document.createElement('div');
+  el.className='car enemy';
+  const ex=8+Math.random()*(road.clientWidth-54);
+  el.style.left=ex+'px';road.appendChild(el);
+  enemies.push({el,x:ex,y:-70});
+ }
+ for(let i=enemies.length-1;i>=0;i--){
+  const e=enemies[i];e.y+=4*dt;e.el.style.top=e.y+'px';
+  if(e.y>road.clientHeight){e.el.remove();enemies.splice(i,1);score++;scoreBox.textContent='Score: '+score;continue}
+  if(e.y+58>road.clientHeight-80&&e.y<road.clientHeight-10&&Math.abs(e.x-x)<34){
+   endGame();return;
   }
-
-  container.innerHTML = data.map(game => `
-    <div style="background:#222;color:white;padding:15px;margin:10px;border-radius:10px">
-      <h3>${game.name ?? ""}</h3>
-      <p>${game.description ?? ""}</p>
-      <p>Category: ${game.category ?? ""}</p>
-    </div>
-  `).join("");
+ }
+ raf=requestAnimationFrame(loop);
 }
-
-showGames();
+document.getElementById('start').onclick=start;
+player.style.left=x+'px';
 </script>
 </body>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const SUPABASE_URL = https://piruzvmqftjksjrnkvhb.supabase.co/rest/v1/
-const SUPABASE_KEY = sb_publishable_01DcZheYmg7UCsQdDmXMdQ_mRXAtrus
-
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-
-async function loadGames() {
-  const { data, error } = await supabaseClient
-    .from("Game")
-    .select("*");
-
-  if (error) {
-    console.error("Games load nahi hue:", error.message);
-    return;
-  }
-
-  console.log("Game data:", data);
-}
-
-loadGames();
-  </script>
 </html>
+
 
 
