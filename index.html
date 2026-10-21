@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,110 +7,223 @@
 <title>Gamezone Racing</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#07111d;color:white;font-family:Arial;text-align:center}
-h1{color:#00f5a0;margin:12px 0}
-.stats{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin:10px}
-.stats span{background:#172637;padding:9px 12px;border-radius:10px}
-#road{position:relative;width:280px;height:55vh;min-height:350px;max-height:500px;margin:12px auto;background:repeating-linear-gradient(90deg,#292e36 0px,#292e36 2px,#343b45 2px,#343b45 4px);border-left:7px solid #e6e6e6;border-right:7px solid #e6e6e6;overflow:hidden;border-radius:5px}
-.lane{position:absolute;top:0;height:100%;width:4px;background:repeating-linear-gradient(to bottom,#eee 0 35px,transparent 35px 65px);animation:roadmove .55s linear infinite}
-.l1{left:33%}.l2{left:66%}
-@keyframes roadmove{to{background-position:0 65px}}
-.car{position:absolute;width:36px;height:60px;border:3px solid #fff;border-radius:10px 10px 6px 6px;box-shadow:0 0 8px #000}
-.car:before{content:"";position:absolute;left:6px;right:6px;top:9px;height:15px;background:#bde8ff;border-radius:4px}
-#player{bottom:15px;left:0;background:#00f5a0}
-.enemy{top:-70px;background:#ff4757}
-button,select{background:#00f5a0;color:#06121c;border:0;border-radius:10px;padding:12px 16px;margin:5px;font-size:16px;font-weight:bold}
-#message{min-height:25px;color:#ffd166}
+body{margin:0;background:#07111f;color:white;font-family:Arial,sans-serif;text-align:center}
+header{padding:12px;background:#101f35}
+h1{margin:4px;color:#48e5ff}
+.stats{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:10px}
+.stats span{background:#162b45;padding:9px 13px;border-radius:10px}
+#game{position:relative;width:min(100%,390px);height:490px;margin:auto;overflow:hidden;background:#237b42;border:3px solid #48e5ff;border-radius:14px}
+#road{position:absolute;left:15%;width:70%;height:100%;background:#343b48;overflow:hidden}
+.edge{position:absolute;top:0;height:100%;width:5px;background:#fff}
+.edge.left{left:0}.edge.right{right:0}
+.lane{position:absolute;top:-100%;height:200%;width:5px;background:repeating-linear-gradient(to bottom,#fff 0 28px,transparent 28px 55px);animation:roadmove .6s linear infinite}
+.lane.one{left:33%}.lane.two{left:66%}
+@keyframes roadmove{to{transform:translateY(55px)}}
+.car{position:absolute;width:38px;height:58px;border-radius:12px 12px 7px 7px;border:2px solid #dcecff;box-shadow:0 0 10px #0009}
+.car:before{content:"";position:absolute;top:10px;left:6px;width:22px;height:15px;border-radius:5px;background:#b9efff}
+.car:after{content:"";position:absolute;bottom:5px;left:5px;width:24px;height:5px;background:#222;border-radius:3px}
+#player{bottom:20px;left:calc(50% - 19px);background:#14d98b;z-index:3;transition:background .15s}
+.enemy{background:#fa4a52}
+.coin{position:absolute;font-size:27px;z-index:2;filter:drop-shadow(0 0 5px gold)}
+#overlay{position:absolute;inset:0;background:#07111fd9;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;padding:18px}
+#overlay h2{font-size:30px;color:#48e5ff}
+button,select{border:0;border-radius:12px;padding:13px 17px;font-size:16px;font-weight:bold;background:#48e5ff;color:#07111f}
+button:active{transform:scale(.94);background:#fff}
+.options{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:8px}
+.controls{display:flex;justify-content:center;gap:25px;padding:12px}
+.controls button{width:125px;height:64px;font-size:28px;touch-action:none;user-select:none}
+.small{font-size:12px;color:#c3d5ea}
 </style>
 </head>
 <body>
-<h1>🏎️ GAMEZONE</h1>
+<header>
+<h1>🏁 GAMEZONE RACING</h1>
+<div>Race • Collect • Survive</div>
+</header>
 <div class="stats">
-<span id="score">⭐ Score: 0</span>
-<span id="coins">🪙 Coins: 0</span>
-<span id="best">🏆 Best: 0</span>
+<span>🏆 Score: <b id="score">0</b></span>
+<span>⭐ Best: <b id="best">0</b></span>
+<span>🪙 Coins: <b id="coins">0</b></span>
 </div>
-<div>
-<label for="color">Car color: </label>
-<select id="color">
-<option value="#00f5a0">Green</option>
-<option value="#38bdf8">Blue</option>
-<option value="#f472b6">Pink</option>
-<option value="#facc15">Yellow</option>
-<option value="#c084fc">Purple</option>
+<div class="options">
+<select id="color" aria-label="Car color">
+<option value="#14d98b">Green Car</option>
+<option value="#299bff">Blue Car</option>
+<option value="#ff59c7">Pink Car</option>
+<option value="#ffdb3d">Yellow Car</option>
+<option value="#a875ff">Purple Car</option>
 </select>
+<button id="music">🎵 Music: OFF</button>
+<button id="sound">🔊 Sound: ON</button>
 </div>
+<div id="game">
 <div id="road">
-<div class="lane l1"></div><div class="lane l2"></div>
+<div class="edge left"></div><div class="edge right"></div>
+<div class="lane one"></div><div class="lane two"></div>
+</div>
 <div id="player" class="car"></div>
+<div id="overlay">
+<h2>🏎️ RACING GAME</h2>
+<p>Dodge cars • Collect coins • Beat your record!</p>
+<button id="start">▶ START RACE</button>
+<p class="small">Hold ◀ and ▶ to steer. Turn on music after starting.</p>
 </div>
-<div id="message">Tap START to race!</div>
-<div>
-<button id="left">⬅ LEFT</button>
-<button id="right">RIGHT ➡</button>
 </div>
-<button id="start">▶ START / RESTART</button>
-<button id="sound">🔊 Sound ON</button>
+<div class="controls">
+<button id="left" aria-label="Steer left">◀</button>
+<button id="right" aria-label="Steer right">▶</button>
+</div>
+<p class="small">Tip: Avoid other cars and collect 🪙 coins!</p>
 <script>
-const road=document.getElementById('road');
+const game=document.getElementById('game');
 const player=document.getElementById('player');
-const scoreBox=document.getElementById('score');
-const coinBox=document.getElementById('coins');
-const bestBox=document.getElementById('best');
-const message=document.getElementById('message');
-let x=0,score=0,coins=0,best=0,running=false,last=0,spawn=0,coinSpawn=0,enemies=[],pickups=[],raf=0,soundOn=true,audio;
-try{best=Number(localStorage.getItem('gamezoneBest')||0)}catch(e){}
-bestBox.textContent='🏆 Best: '+best;
-function beep(freq=600,duration=.08){
- if(!soundOn)return;
- try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=freq;o.connect(g);g.connect(audio.destination);g.gain.value=.06;o.start();o.stop(audio.currentTime+duration)}catch(e){}
+const overlay=document.getElementById('overlay');
+const scoreEl=document.getElementById('score');
+const bestEl=document.getElementById('best');
+const coinsEl=document.getElementById('coins');
+const musicBtn=document.getElementById('music');
+const soundBtn=document.getElementById('sound');
+
+let running=false, score=0, coins=0, x=0;
+let enemies=[], pickups=[], lastTime=0, enemyTimer=0, coinTimer=0;
+let heldLeft=false, heldRight=false, musicOn=false, soundOn=true;
+let audio=null, musicTimer=null, musicStep=0;
+let best=Number(localStorage.getItem('gamezoneBest')||0);
+bestEl.textContent=best;
+
+function initAudio(){
+ if(!audio){
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(AC) audio=new AC();
+ }
+ if(audio&&audio.state==='suspended') audio.resume();
 }
-function move(d){if(!running)return;x=Math.max(8,Math.min(road.clientWidth-44,x+d*24));player.style.left=x+'px'}
-document.getElementById('left').onclick=()=>move(-1);
-document.getElementById('right').onclick=()=>move(1);
-document.getElementById('color').onchange=e=>player.style.background=e.target.value;
-document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')move(-1);if(e.key==='ArrowRight')move(1)});
-document.getElementById('sound').onclick=()=>{soundOn=!soundOn;document.getElementById('sound').textContent=soundOn?'🔊 Sound ON':'🔇 Sound OFF';if(soundOn)beep()};
-function endGame(){running=false;cancelAnimationFrame(raf);beep(160,.25);message.textContent='💥 Game Over! Tap START to race again.'}
-function start(){
- cancelAnimationFrame(raf);enemies.forEach(e=>e.el.remove());pickups.forEach(c=>c.el.remove());enemies=[];pickups=[];
- score=0;coins=0;x=(road.clientWidth-36)/2;player.style.left=x+'px';
- scoreBox.textContent='⭐ Score: 0';coinBox.textContent='🪙 Coins: 0';
- message.textContent='Race started! Collect coins and avoid red cars!';
- running=true;last=performance.now();spawn=0;coinSpawn=0;raf=requestAnimationFrame(loop);beep(750)
+function beep(freq=500,duration=.09,type='sine',volume=.07){
+ if(!audio||!soundOn)return;
+ const o=audio.createOscillator(),g=audio.createGain();
+ o.type=type;o.frequency.value=freq;
+ g.gain.setValueAtTime(volume,audio.currentTime);
+ g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);
+ o.connect(g);g.connect(audio.destination);
+ o.start();o.stop(audio.currentTime+duration);
 }
-function loop(t){
+function musicTick(){
+ if(!musicOn||!audio)return;
+ const notes=[262,330,392,330,294,349,440,349,262,330,392,523,440,392,330,294];
+ const o=audio.createOscillator(),g=audio.createGain();
+ o.type='triangle';o.frequency.value=notes[musicStep++%notes.length];
+ g.gain.value=.035;o.connect(g);g.connect(audio.destination);
+ o.start();o.stop(audio.currentTime+.16);
+}
+function toggleMusic(){
+ initAudio();musicOn=!musicOn;
+ musicBtn.textContent=musicOn?'🎵 Music: ON':'🎵 Music: OFF';
+ if(musicTimer)clearInterval(musicTimer);
+ if(musicOn){musicTick();musicTimer=setInterval(musicTick,190);}
+}
+musicBtn.addEventListener('click',toggleMusic);
+soundBtn.addEventListener('click',()=>{
+ soundOn=!soundOn;
+ soundBtn.textContent=soundOn?'🔊 Sound: ON':'🔇 Sound: OFF';
+ if(soundOn){initAudio();beep(650);}
+});
+document.getElementById('color').addEventListener('change',e=>player.style.background=e.target.value);
+
+function clearObjects(){
+ enemies.forEach(e=>e.el.remove());pickups.forEach(c=>c.el.remove());
+ enemies=[];pickups=[];
+}
+function startGame(){
+ initAudio();clearObjects();
+ score=0;coins=0;x=game.clientWidth/2-player.offsetWidth/2;
+ player.style.left=x+'px';
+ scoreEl.textContent=0;coinsEl.textContent=0;
+ enemyTimer=0;coinTimer=0;lastTime=performance.now();
+ running=true;overlay.style.display='none';
+ requestAnimationFrame(loop);
+}
+document.getElementById('start').addEventListener('click',startGame);
+
+function makeEnemy(){
+ const el=document.createElement('div');el.className='car enemy';
+ const roadLeft=game.clientWidth*.15, roadWidth=game.clientWidth*.70;
+ const left=roadLeft+8+Math.random()*(roadWidth-54);
+ el.style.left=left+'px';el.style.top='-65px';game.appendChild(el);
+ enemies.push({el,y:-65,x:left});
+}
+function makeCoin(){
+ const el=document.createElement('div');el.className='coin';el.textContent='🪙';
+ const roadLeft=game.clientWidth*.15, roadWidth=game.clientWidth*.70;
+ const left=roadLeft+10+Math.random()*(roadWidth-38);
+ el.style.left=left+'px';el.style.top='-35px';game.appendChild(el);
+ pickups.push({el,y:-35,x:left});
+}
+function overlap(a,b){
+ return a.x < b.x+b.w && a.x+a.w > b.x &&
+        a.y < b.y+b.h && a.y+a.h > b.y;
+}
+function endGame(){
+ running=false;heldLeft=false;heldRight=false;
+ beep(150,.4,'sawtooth',.1);
+ if(score>best){best=score;localStorage.setItem('gamezoneBest',best);bestEl.textContent=best;}
+ overlay.innerHTML='<h2>💥 GAME OVER</h2><p>Score: '+score+'</p><p>🪙 Coins collected: '+coins+'</p><button id="again">🔄 PLAY AGAIN</button>';
+ overlay.style.display='flex';
+ document.getElementById('again').addEventListener('click',startGame);
+}
+function loop(now){
  if(!running)return;
- const dt=Math.min((t-last)/16,2);last=t;spawn+=dt;coinSpawn+=dt;
- const speed=(3.2+score*.035)*dt;
- if(spawn>Math.max(24,58-score*.25)){
-  spawn=0;const el=document.createElement('div');el.className='car enemy';
-  const ex=8+Math.random()*(road.clientWidth-54);el.style.left=ex+'px';road.appendChild(el);enemies.push({el,x:ex,y:-70})
- }
- if(coinSpawn>65){
-  coinSpawn=0;const el=document.createElement('div');el.textContent='🪙';el.style.cssText='position:absolute;top:-30px;font-size:25px;width:30px;text-align:center';
-  const cx=8+Math.random()*(road.clientWidth-45);el.style.left=cx+'px';road.appendChild(el);pickups.push({el,x:cx,y:-30})
- }
+ const dt=Math.min((now-lastTime)/16.67,2);lastTime=now;
+ const speed=(3.1+score*.012)*dt;
+ if(heldLeft)x-=5.5*dt;
+ if(heldRight)x+=5.5*dt;
+ const min=game.clientWidth*.15+7;
+ const max=game.clientWidth*.85-player.offsetWidth-7;
+ x=Math.max(min,Math.min(max,x));player.style.left=x+'px';
+
+ enemyTimer+=dt;coinTimer+=dt;
+ if(enemyTimer>Math.max(20,52-score*.12)){makeEnemy();enemyTimer=0;}
+ if(coinTimer>65){makeCoin();coinTimer=0;}
+ const pw=player.offsetWidth,ph=player.offsetHeight;
+ const py=player.offsetTop;
  for(let i=enemies.length-1;i>=0;i--){
   const e=enemies[i];e.y+=speed;e.el.style.top=e.y+'px';
-  if(e.y>road.clientHeight){e.el.remove();enemies.splice(i,1);score++;scoreBox.textContent='⭐ Score: '+score;beep(500,.035);continue}
-  if(e.y+55>road.clientHeight-78&&e.y<road.clientHeight-12&&Math.abs(e.x-x)<32){endGame();return}
+  if(overlap({x,y:py,w:pw,h:ph},{x:e.x,y:e.y,w:38,h:58})){endGame();return;}
+  if(e.y>game.clientHeight){e.el.remove();enemies.splice(i,1);score+=1;scoreEl.textContent=score;}
  }
  for(let i=pickups.length-1;i>=0;i--){
-  const c=pickups[i];c.y+=speed;c.el.style.top=c.y+'px';
-  if(c.y>road.clientHeight){c.el.remove();pickups.splice(i,1);continue}
-  if(c.y+24>road.clientHeight-78&&c.y<road.clientHeight-10&&Math.abs(c.x-x)<34){
-   coins++;coinBox.textContent='🪙 Coins: '+coins;c.el.remove();pickups.splice(i,1);beep(950,.12)
+  const c=pickups[i];c.y+=speed*.85;c.el.style.top=c.y+'px';
+  if(overlap({x,y:py,w:pw,h:ph},{x:c.x,y:c.y,w:28,h:28})){
+   coins++;score+=5;coinsEl.textContent=coins;scoreEl.textContent=score;
+   beep(880,.12,'sine',.09);c.el.remove();pickups.splice(i,1);continue;
   }
+  if(c.y>game.clientHeight){c.el.remove();pickups.splice(i,1);}
  }
- if(score>best){best=score;bestBox.textContent='🏆 Best: '+best;try{localStorage.setItem('gamezoneBest',best)}catch(e){}}
- raf=requestAnimationFrame(loop)
+ requestAnimationFrame(loop);
 }
-document.getElementById('start').onclick=start;
-player.style.left=x+'px';player.style.background=document.getElementById('color').value;
+function holdButton(id,which){
+ const el=document.getElementById(id);
+ const down=e=>{e.preventDefault();initAudio();which==='left'?heldLeft=true:heldRight=true;};
+ const up=e=>{e.preventDefault();which==='left'?heldLeft=false:heldRight=false;};
+ el.addEventListener('pointerdown',down);
+ el.addEventListener('pointerup',up);
+ el.addEventListener('pointerleave',up);
+ el.addEventListener('pointercancel',up);
+ el.addEventListener('contextmenu',e=>e.preventDefault());
+}
+holdButton('left','left');holdButton('right','right');
+window.addEventListener('keydown',e=>{
+ if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){heldLeft=true;e.preventDefault();}
+ if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){heldRight=true;e.preventDefault();}
+});
+window.addEventListener('keyup',e=>{
+ if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A')heldLeft=false;
+ if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')heldRight=false;
+});
+window.addEventListener('blur',()=>{heldLeft=false;heldRight=false;});
 </script>
 </body>
 </html>
+
 
 
 
