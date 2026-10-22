@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080916"><title>Gamezone Coins Wallet</title>
+<style>
+:root{--bg:#080916;--panel:#111329;--purple:#9b7bff;--cyan:#50f5e2;--text:#f7f7ff;--muted:#b0b3d0;--border:rgba(165,157,255,.25)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 10% 0%,rgba(91,61,190,.2),transparent 35%),var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif;line-height:1.5}.wrap{width:min(760px,92%);margin:auto;padding:24px 0 40px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px}.brand{font-size:21px;font-weight:900}.brand span{color:var(--cyan)}a{color:var(--cyan);text-decoration:none}.panel{padding:22px;background:linear-gradient(145deg,#171936,#101225);border:1px solid var(--border);border-radius:20px;margin:15px 0}.eyebrow{font-size:12px;letter-spacing:1.4px;color:var(--cyan);font-weight:800}.balance{font-size:clamp(36px,10vw,52px);font-weight:950;margin:6px 0}.muted{color:var(--muted);font-size:14px}.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}.btn,button{font:inherit;cursor:pointer;border-radius:12px;padding:12px 15px;font-weight:800;border:1px solid var(--purple);background:rgba(155,123,255,.12);color:var(--text)}.primary{background:linear-gradient(110deg,var(--cyan),#9bf9e9);color:#080916;border-color:transparent}.fields{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.fields input{flex:1;min-width:130px;background:#090b1d;border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;font:inherit}.note{border-left:3px solid var(--cyan);padding:10px 12px;background:rgba(80,245,226,.06);border-radius:6px;font-size:13px;color:var(--muted)}.history{padding:0;list-style:none;margin:10px 0 0}.history li{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);font-size:14px}.history li:last-child{border-bottom:0}.tag{font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:20px;color:var(--cyan)}.smallbtn{padding:7px 10px;font-size:12px}.empty{padding:18px 0;color:var(--muted);font-size:14px}@media(max-width:440px){.panel{padding:17px}.actions{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body><main class="wrap">
+<div class="top"><div class="brand">GAME<span>ZONE</span> · COINS</div><a href="index.html">← Back to games</a></div>
+<section class="panel">
+<div class="eyebrow">VIRTUAL COINS WALLET</div><div class="balance"><span id="balance">1,000</span> 🪙</div><div class="muted">Demo coins only · No real money value</div>
+<div class="actions"><button class="primary" id="earnBtn">＋ Add demo coins</button><button id="spendBtn">− Use demo coins</button></div>
+</section>
+<section class="panel"><h2>Coin activity</h2><p class="muted">Try adding or using virtual coins. These actions do not charge or pay money.</p>
+<div class="fields"><input id="amount" type="number" min="1" max="10000" step="1" value="100" aria-label="Coin amount"><button id="resetBtn" class="smallbtn">Reset demo</button></div>
+<p id="message" class="muted" aria-live="polite"></p><ul id="history" class="history"></ul>
+</section>
+<div class="note">यह सिर्फ demo wallet है। Coins का कोई cash value नहीं है; deposit या withdrawal के नाम पर कोई वास्तविक भुगतान नहीं होता। Demo balance इसी browser/device में रखा जाता है और reset/clear करने पर मिट सकता है।</div>
+</main>
+<script>
+(function(){
+const KEY='gamezone_demo_coins_v1';
+let state;
+try{state=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){state=null}
+if(!state||typeof state.balance!=='number'||!Array.isArray(state.history))state={balance:1000,history:[{label:'Welcome bonus',delta:1000,at:new Date().toISOString()}]};
+const balanceEl=document.getElementById('balance'),historyEl=document.getElementById('history'),message=document.getElementById('message'),amountEl=document.getElementById('amount');
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}render()}
+function render(){balanceEl.textContent=state.balance.toLocaleString('en-IN');historyEl.innerHTML='';if(!state.history.length){historyEl.innerHTML='<li class="empty">No activity yet.</li>';return}state.history.slice().reverse().slice(0,20).forEach(item=>{const li=document.createElement('li'),left=document.createElement('span'),right=document.createElement('strong');left.textContent=item.label+' · '+new Date(item.at).toLocaleString();right.textContent=(item.delta>0?'+':'')+item.delta.toLocaleString('en-IN')+' 🪙';right.style.color=item.delta>=0?'#50f5e2':'#ff9da8';li.append(left,right);historyEl.appendChild(li)})}
+function transact(kind){const n=Number(amountEl.value);if(!Number.isInteger(n)||n<1||n>10000){message.textContent='1 से 10,000 तक coins की संख्या डालो।';return}if(kind==='spend'&&n>state.balance){message.textContent='इतने coins नहीं हैं।';return}const delta=kind==='earn'?n:-n;state.balance+=delta;state.history.push({label:kind==='earn'?'Demo coins added':'Demo coins used',delta,at:new Date().toISOString()});message.textContent=kind==='earn'?'Demo coins जोड़ दिए गए।':'Demo coins इस्तेमाल हुए।';save()}
+document.getElementById('earnBtn').addEventListener('click',()=>transact('earn'));document.getElementById('spendBtn').addEventListener('click',()=>transact('spend'));document.getElementById('resetBtn').addEventListener('click',()=>{if(confirm('Demo wallet को 1,000 coins पर reset करें?')){state={balance:1000,history:[{label:'Demo reset bonus',delta:1000,at:new Date().toISOString()}]};message.textContent='Demo wallet reset हो गया।';save()}});
+render();
+})();
+</script></body></html>
