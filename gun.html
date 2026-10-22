@@ -43,6 +43,8 @@ canvas{display:block}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (()=>{
+const scoreClient=window.supabase.createClient("https://piruzvmqftjksjrnkvhb.supabase.co","sb_publishable_01DcZheYmg7UCsQdDmXMdQ_mRXAtrus");
+let scoreSaved=false;
 const msg=document.getElementById('msg');
 if(!window.THREE){msg.innerHTML='Internet required<br><small>Reload the game</small>';return;}
 const scene=new THREE.Scene();
@@ -105,7 +107,7 @@ let yaw=0,moveX=0,moveY=0,shooting=false,lastShot=0,spawn=0;
 function reset(){
  if(player)scene.remove(player);
  enemies.forEach(e=>scene.remove(e));bullets.forEach(b=>scene.remove(b.mesh));
- enemies=[];bullets=[];hp=100;kills=0;over=false;yaw=0;spawn=0;
+ enemies=[];bullets=[];hp=100;kills=0;over=false;scoreSaved=false;yaw=0;spawn=0;
  player=soldier(false);player.position.set(0,0,0);
  document.getElementById('hp').textContent=hp;
  document.getElementById('kills').textContent=kills;
@@ -148,6 +150,15 @@ renderer.domElement.addEventListener('pointermove',e=>{
 renderer.domElement.addEventListener('pointerup',()=>aiming=false);
 renderer.domElement.addEventListener('pointercancel',()=>aiming=false);
 document.getElementById('restart').onclick=reset;
+async function saveScore(){
+ try{
+  const {data:{session},error:authError}=await scoreClient.auth.getSession();
+  if(authError||!session){msg.innerHTML='GAME OVER<br><small>Kills: '+kills+'<br>Log in again to save</small>';return;}
+  const {error}=await scoreClient.from('game_scores').insert({user_id:session.user.id,game_name:'gun',score:kills});
+  if(error) throw error;
+  msg.innerHTML='GAME OVER<br><small>Kills: '+kills+'<br>Score saved!</small>';
+ }catch(error){console.error('Could not save score:',error);msg.innerHTML='GAME OVER<br><small>Kills: '+kills+'<br>Score not saved</small>';}
+}
 function update(dt){
  if(over)return;
  const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
@@ -177,7 +188,7 @@ function update(dt){
   e.lookAt(player.position.x,0,player.position.z);
   if(d<1.8){hp-=12*dt;document.getElementById('hp').textContent=Math.max(0,Math.ceil(hp))}
  });
- if(hp<=0){over=true;msg.innerHTML='GAME OVER<br><small>Kills: '+kills+'</small>';msg.style.display='block';document.getElementById('restart').style.display='block'}
+ if(hp<=0){over=true;msg.innerHTML='GAME OVER<br><small>Kills: '+kills+'<br>Saving score...</small>';msg.style.display='block';document.getElementById('restart').style.display='block';if(!scoreSaved){scoreSaved=true;saveScore()}}
 }
 function animate(){
  requestAnimationFrame(animate);
