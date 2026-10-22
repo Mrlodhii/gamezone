@@ -99,8 +99,13 @@ function setMode(nextMode) {
   say("");
 }
 
-loginTab.addEventListener("click", () => setMode("login"));
-signupTab.addEventListener("click", () => setMode("signup"));
+loginTab.onclick = function () {
+  setMode("login");
+};
+
+signupTab.onclick = function () {
+  setMode("signup");
+};
 
 form.addEventListener("submit", async function(event) {
   event.preventDefault();
