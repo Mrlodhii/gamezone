@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080916"><title>₹99 Lifetime Access | Gamezone</title>
+<style>
+:root{--bg:#080916;--panel:#14152c;--purple:#9b7bff;--cyan:#50f5e2;--text:#f7f7ff;--muted:#b0b3d0}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;padding:24px 14px;background:radial-gradient(ellipse at top,rgba(91,61,190,.25),transparent 45%),var(--bg);color:var(--text);font:16px/1.55 system-ui,Arial}.wrap{width:min(540px,100%);margin:auto}.top a{color:var(--cyan);text-decoration:none}.panel{margin-top:18px;padding:24px;border:1px solid #514778;border-radius:22px;background:rgba(20,21,44,.94);box-shadow:0 18px 50px #0005}h1{text-align:center;font-size:30px;margin:4px 0}p{color:var(--muted)}.price{text-align:center;color:var(--cyan);font-size:38px;font-weight:900;margin:8px}.qr{display:block;width:240px;height:240px;object-fit:contain;background:white;border-radius:12px;padding:8px;margin:18px auto}.upi{text-align:center;overflow-wrap:anywhere;font-weight:800;color:#fff}.btn{display:block;width:100%;border:0;border-radius:11px;padding:13px;background:linear-gradient(100deg,var(--cyan),#b6fff4);color:#080916;font-weight:900;font-size:15px;text-align:center;text-decoration:none;cursor:pointer;margin-top:12px}.btn:disabled{opacity:.55}.field{display:block;margin-top:14px;font-weight:700}input{width:100%;padding:13px;margin-top:6px;border-radius:9px;border:1px solid #514778;background:#090b1b;color:white;font-size:16px}small,.note{color:var(--muted);font-size:13px}.status{margin-top:14px;padding:12px;border-radius:9px;background:#090b1b;overflow-wrap:anywhere}.hidden{display:none}.warn{color:#ffe5a3}.ok{color:var(--cyan)}
+</style>
+</head>
+<body><main class="wrap">
+<div class="top"><a href="index.html">← GAMEZONE</a></div>
+<section class="panel">
+<h1>🔓 Lifetime Access</h1><p style="text-align:center">एक बार ₹99 भुगतान करके Gamezone के सभी गेम्स के लिए lifetime access का अनुरोध करें।</p>
+<div class="price">₹99</div>
+<img id="qr" class="qr" alt="₹99 UPI payment QR code">
+<div class="upi">UPI ID: <span id="upiText">7828400189@ptaxis</span></div>
+<button id="copyBtn" class="btn" type="button">UPI ID कॉपी करें</button>
+<a id="upiApp" class="btn" href="#">UPI App में भुगतान करें</a>
+<p class="note warn">भुगतान करने से पहले UPI ID और ₹99 राशि जाँच लें। अपना UPI PIN/OTP कभी साझा न करें। भुगतान का screenshot अपने पास रखें।</p>
+</section>
+<section class="panel">
+<h2>भुगतान की जानकारी भेजें</h2>
+<p>भुगतान करने के बाद UTR / Transaction ID भरें। हम भुगतान जाँचकर access manually approve करेंगे। सिर्फ form भेजने से access unlock नहीं होगा।</p>
+<div id="loginNote" class="status">Status जाँच रहे हैं…</div>
+<form id="requestForm" class="hidden">
+<label class="field" for="utr">UTR / Transaction ID</label><input id="utr" minlength="8" maxlength="80" required placeholder="भुगतान के बाद मिला UTR">
+<button class="btn" id="submitBtn" type="submit">Verification के लिए भेजें</button>
+</form>
+<div id="requestStatus" class="status" aria-live="polite">अपना account status देखने के लिए login करें।</div>
+<a id="loginBtn" class="btn" href="login.html">Login / Sign up</a>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://piruzvmqftjksjrnkvhb.supabase.co";
+const SUPABASE_KEY="sb_publishable_01DcZheYmg7UCsQdDmXMdQ_mRXAtrus";
+const UPI_ID="7828400189@ptaxis";
+const params=new URLSearchParams({pa:UPI_ID,pn:"Gamezone",am:"99.00",cu:"INR",tn:"Gamezone Lifetime Access"});
+const upiUri="upi://pay?"+params.toString();
+document.getElementById("qr").src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data="+encodeURIComponent(upiUri);
+document.getElementById("upiApp").href=upiUri;
+document.getElementById("copyBtn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(UPI_ID);document.getElementById("copyBtn").textContent="UPI ID कॉपी हो गई ✓"}catch(e){document.getElementById("requestStatus").textContent="UPI ID: "+UPI_ID}});
+const client=window.supabase?.createClient(SUPABASE_URL,SUPABASE_KEY);
+const loginNote=document.getElementById("loginNote"), form=document.getElementById("requestForm"), statusBox=document.getElementById("requestStatus"), loginBtn=document.getElementById("loginBtn");
+async function init(){
+ if(!client){loginNote.textContent="Supabase लोड नहीं हुआ। Internet जाँचें।";return}
+ const {data:{session}}=await client.auth.getSession();
+ if(!session){loginNote.textContent="Payment request भेजने से पहले login करें।";statusBox.textContent="Login करके वापस इस page पर आएँ।";return}
+ loginNote.textContent="Logged in: "+session.user.email;form.classList.remove("hidden");loginBtn.classList.add("hidden");
+ const {data:access,error:accessError}=await client.from("gamezone_access").select("user_id,approved_at").eq("user_id",session.user.id).maybeSingle();
+ if(accessError){statusBox.textContent="Database setup बाकी है या status पढ़ने में समस्या हुई। नीचे दिया SQL Supabase में चलाएँ।";return}
+ if(access){statusBox.innerHTML='<span class="ok">✓ आपका lifetime access approved है।</span>';form.classList.add("hidden");return}
+ const {data:req,error:reqError}=await client.from("gamezone_payment_requests").select("utr,status,created_at").eq("user_id",session.user.id).order("created_at",{ascending:false}).limit(1);
+ if(reqError){statusBox.textContent="Payment tables अभी setup नहीं हैं। Supabase SQL setup पूरा करें।";return}
+ if(req&&req.length){statusBox.textContent="Latest request status: "+req[0].status+" · UTR: "+req[0].utr;if(req[0].status==="pending")form.classList.add("hidden")}
+}
+form.addEventListener("submit",async e=>{e.preventDefault();const {data:{session}}=await client.auth.getSession();if(!session){statusBox.textContent="पहले login करें।";return}
+ const utr=document.getElementById("utr").value.trim();if(utr.length<8){statusBox.textContent="सही UTR / Transaction ID भरें।";return}
+ const btn=document.getElementById("submitBtn");btn.disabled=true;btn.textContent="भेज रहे हैं…";
+ const {error}=await client.from("gamezone_payment_requests").insert({user_id:session.user.id,utr:utr,status:"pending"});
+ if(error){statusBox.textContent=error.message.includes("duplicate")?"यह UTR पहले submit किया जा चुका है।":"Request submit नहीं हुई: "+error.message}
+ else{statusBox.textContent="Request भेज दी गई। भुगतान की manual जाँच के बाद status update होगा।";form.classList.add("hidden")}
+ btn.disabled=false;btn.textContent="Verification के लिए भेजें";
+});
+init();
+</script>
+</body></html>
