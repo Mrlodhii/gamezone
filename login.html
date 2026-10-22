@@ -67,7 +67,11 @@ const signupTab = document.getElementById("signupTab");
 
 let mode = "login";
 let client = null;
-
+const form = document.getElementById("authForm");
+const message = document.getElementById("message");
+const submitBtn = document.getElementById("submitBtn");
+const emailInput = document.getElementById("email");
+const passwordInput = document.getElementById("password");
 function say(text) {
   message.textContent = text;
 }
