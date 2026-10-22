@@ -21,18 +21,16 @@ canvas{display:block}
 <body style="visibility:hidden">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  (async function requireGamezoneLogin() {
-    const authClient = window.supabase.createClient(
-      "https://piruzvmqftjksjrnkvhb.supabase.co",
-      "sb_publishable_01DcZheYmg7UCsQdDmXMdQ_mRXAtrus"
-    );
-    const { data, error } = await authClient.auth.getSession();
-    if (error || !data.session) {
-      window.location.replace("login.html");
-      return;
-    }
-    document.body.style.visibility = "visible";
-  })();
+(async function requireGamezoneAccess(){
+ const c=window.supabase.createClient("https://piruzvmqftjksjrnkvhb.supabase.co","sb_publishable_01DcZheYmg7UCsQdDmXMdQ_mRXAtrus");
+ const {data:{session},error}=await c.auth.getSession();
+ if(error){document.body.style.visibility="visible";document.body.innerHTML='<main style="font:16px system-ui;background:#080916;color:white;padding:24px"><h2>Access status जाँच नहीं सका</h2><p>Internet जाँचकर फिर कोशिश करें।</p><a style="color:#50f5e2" href="pay.html">Payment / Access</a></main>';return;}
+ if(!session){window.location.replace("login.html");return;}
+ const result=await c.from("gamezone_access").select("user_id").eq("user_id",session.user.id).maybeSingle();
+ if(result.error){document.body.style.visibility="visible";document.body.innerHTML='<main style="font:16px system-ui;background:#080916;color:white;padding:24px"><h2>Access status जाँच नहीं सका</h2><p>Supabase table/policy जाँचें।</p><a style="color:#50f5e2" href="pay.html">Payment / Access</a></main>';return;}
+ if(!result.data){window.location.replace("pay.html?locked=1");return;}
+ document.body.style.visibility="visible";
+})();
 </script>
 <div id="hud">❤️ HP: <span id="hp">100</span><br>🎯 Kills: <span id="kills">0</span></div>
 <div id="hint">RIGHT SIDE DRAG = AIM</div>
