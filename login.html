@@ -1,161 +1,299 @@
+
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#080d0a">
-<title>Gamezone | Login & Sign Up</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:grid;place-items:center;padding:18px;background:radial-gradient(circle at top,#194327,#080d0a 65%);font-family:Arial,sans-serif;color:#fff}
-.card{width:100%;max-width:420px;padding:26px;background:#101912;border:1px solid #31563a;border-radius:18px;box-shadow:0 15px 50px #0008}
-.logo{text-align:center;font-size:30px;font-weight:900;margin-bottom:5px}
-.logo span{color:#53ff75}
-.sub{text-align:center;color:#a9b9ac;margin:0 0 25px}
-.tabs{display:flex;gap:8px;margin-bottom:20px}
-.tabs button{flex:1;padding:12px;border:0;border-radius:9px;background:#1a281d;color:#fff;font-weight:bold}
-.tabs button.active,.submit{background:#53ff75;color:#071109}
-label{display:block;margin:14px 0 7px;font-size:14px}
-input{width:100%;padding:13px;border:1px solid #34513a;border-radius:9px;background:#080d0a;color:#fff;font-size:16px}
-input:focus{outline:2px solid #53ff75}
-.submit{width:100%;padding:14px;margin-top:20px;border:0;border-radius:9px;font-weight:bold;font-size:16px}
-.submit:disabled{opacity:.6}
-#message{font-size:14px;line-height:1.5;overflow-wrap:anywhere;color:#baffc5}
-.back{text-align:center;margin-top:22px;font-size:14px}
-a{color:#53ff75}
-</style>
-</head>
-<body>
-<main class="card">
-  <div class="logo">GAME<span>ZONE</span></div>
-  <p class="sub">Your game. Your world.</p>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gamezone - Login</title>
 
-  <div class="tabs">
-    <button type="button" id="loginTab" class="active">LOGIN</button>
-    <button type="button" id="signupTab">SIGN UP</button>
-  </div>
-
-  <form id="authForm">
-    <label for="email">Email Address</label>
-    <input id="email" type="email" placeholder="you@example.com"
-      autocomplete="email" required>
-
-    <label for="password">Password</label>
-    <input id="password" type="password"
-      placeholder="At least 8 characters"
-      minlength="8" autocomplete="current-password" required>
-
-    <button class="submit" id="submitBtn" type="submit">LOGIN</button>
-  </form>
-
-  <p id="message" role="status" aria-live="polite"></p>
-  <div class="back"><a href="index.html">← Back to Gamezone</a></div>
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const SUPABASE_URL = "https://piruzvmqftjksjrnkvhb.supabase.co";
-const SUPABASE_KEY = "sb_publishable_01DcZheYmg7UCsQdDmXMdQ_mRXAtrus";
-
-const form = document.getElementById("authForm");
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const submitBtn = document.getElementById("submitBtn");
-const message = document.getElementById("message");
-const loginTab = document.getElementById("loginTab");
-const signupTab = document.getElementById("signupTab");
-
-let mode = "login";
-let client = null;
-const form = document.getElementById("authForm");
-const message = document.getElementById("message");
-const submitBtn = document.getElementById("submitBtn");
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-function say(text) {
-  message.textContent = text;
-}
-
-if (window.supabase &&
-    SUPABASE_URL.startsWith("https://") &&
-    !SUPABASE_URL.includes("PASTE_") &&
-    SUPABASE_KEY &&
-    !SUPABASE_KEY.includes("PASTE_")) {
-  client = window.supabase.createClient(
-    SUPABASE_URL, SUPABASE_KEY
-  );
-} else {
-  say("Supabase Project URL aur Publishable Key abhi add karni hai.");
-}
-
-function setMode(nextMode) {
-  mode = nextMode;
-  loginTab.classList.toggle("active", mode === "login");
-  signupTab.classList.toggle("active", mode === "signup");
-  submitBtn.textContent =
-    mode === "login" ? "LOGIN" : "CREATE ACCOUNT";
-  passwordInput.autocomplete =
-    mode === "login" ? "current-password" : "new-password";
-  say("");
-}
-
-loginTab.onclick = function () {
-  setMode("login");
-};
-
-signupTab.onclick = function () {
-  setMode("signup");
-};
-
-form.addEventListener("submit", async function(event) {
-  event.preventDefault();
-
-  if (!client) {
-    say("Pehle apna Supabase URL aur Publishable Key add karo.");
-    return;
-  }
-
-  submitBtn.disabled = true;
-  say("Please wait...");
-
-  try {
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
-
-    if (mode === "signup") {
-      const {data, error} = await client.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          emailRedirectTo:
-            window.location.origin +
-            window.location.pathname.replace(/[^/]*$/, "index.html")
-        }
-      });
-
-      if (error) throw error;
-
-      if (data.session) {
-        window.location.href = "index.html";
-      } else {
-        say("Account request successful! Agar email confirmation on hai, apne email ka confirmation link kholo.");
-      }
-    } else {
-      const {error} = await client.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-
-      if (error) throw error;
-      window.location.href = "index.html";
+  <style>
+    * {
+      box-sizing: border-box;
     }
-  } catch (error) {
-    say(error.message || "Login nahi ho paya. Dobara try karo.");
-  } finally {
-    submitBtn.disabled = false;
-  }
-});
-</script>
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: #080b10;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 390px;
+      padding: 28px;
+      background: #111820;
+      border: 1px solid #26343d;
+      border-radius: 18px;
+      box-shadow: 0 0 25px #00ff8820;
+    }
+
+    h1 {
+      text-align: center;
+      color: #00ff88;
+      margin: 0 0 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #aab5bd;
+      margin-bottom: 25px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .tabs button {
+      width: 50%;
+      padding: 13px;
+      border: 1px solid #33434d;
+      border-radius: 8px;
+      background: #19232c;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .tabs button.active {
+      background: #00ff88;
+      color: #06120c;
+      border-color: #00ff88;
+    }
+
+    label {
+      display: block;
+      margin: 14px 0 7px;
+      color: #d8e0e5;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #34444f;
+      border-radius: 8px;
+      background: #080e13;
+      color: white;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #00ff88;
+    }
+
+    #submitBtn {
+      width: 100%;
+      margin-top: 22px;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      background: #00ff88;
+      color: #06120c;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #submitBtn:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    #message {
+      min-height: 22px;
+      margin: 16px 0 0;
+      text-align: center;
+      overflow-wrap: anywhere;
+      color: #00ff88;
+      font-size: 14px;
+    }
+
+    .back {
+      display: block;
+      margin-top: 20px;
+      text-align: center;
+      color: #00ff88;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>GAMEZONE</h1>
+    <p class="subtitle">Login or create your account</p>
+
+    <div class="tabs">
+      <button type="button" id="loginTab" class="active">
+        LOGIN
+      </button>
+      <button type="button" id="signupTab">
+        SIGN UP
+      </button>
+    </div>
+
+    <form id="authForm">
+      <label for="email">Email address</label>
+      <input
+        id="email"
+        type="email"
+        placeholder="Enter your email"
+        autocomplete="email"
+        required
+      >
+
+      <label for="password">Password</label>
+      <input
+        id="password"
+        type="password"
+        placeholder="Enter password (minimum 6 characters)"
+        minlength="6"
+        autocomplete="current-password"
+        required
+      >
+
+      <button id="submitBtn" type="submit">LOGIN</button>
+      <p id="message" role="status" aria-live="polite"></p>
+    </form>
+
+    <a class="back" href="index.html">← Back to Home</a>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // Apne existing Supabase project details yahan rakho.
+    const SUPABASE_URL =
+      "https://piruzvmqftjksjrnkvhb.supabase.co";
+
+    const SUPABASE_KEY = "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
+
+    const loginTab = document.getElementById("loginTab");
+    const signupTab = document.getElementById("signupTab");
+    const form = document.getElementById("authForm");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const submitBtn = document.getElementById("submitBtn");
+    const message = document.getElementById("message");
+
+    let mode = "login";
+    let client = null;
+
+    function say(text) {
+      message.textContent = text;
+    }
+
+    function setMode(nextMode) {
+      mode = nextMode;
+
+      loginTab.classList.toggle("active", mode === "login");
+      signupTab.classList.toggle("active", mode === "signup");
+
+      submitBtn.textContent =
+        mode === "login" ? "LOGIN" : "CREATE ACCOUNT";
+
+      passwordInput.autocomplete =
+        mode === "login" ? "current-password" : "new-password";
+
+      passwordInput.minLength = mode === "signup" ? 6 : 1;
+      passwordInput.placeholder =
+        mode === "signup"
+          ? "Create a password (minimum 6 characters)"
+          : "Enter your password";
+
+      say("");
+    }
+
+    loginTab.addEventListener("click", function () {
+      setMode("login");
+    });
+
+    signupTab.addEventListener("click", function () {
+      setMode("signup");
+    });
+
+    if (
+      window.supabase &&
+      SUPABASE_URL.startsWith("https://") &&
+      SUPABASE_KEY &&
+      !SUPABASE_KEY.includes("PASTE_")
+    ) {
+      client = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      );
+    } else {
+      say("Supabase Publishable Key add karna baaki hai.");
+    }
+
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      if (!client) {
+        say("Pehle apni Supabase Publishable Key add karo.");
+        return;
+      }
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (mode === "signup" && password.length < 6) {
+        say("Password kam se kam 6 characters ka rakho.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      say("Please wait...");
+
+      try {
+        if (mode === "signup") {
+          const { data, error } = await client.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+              emailRedirectTo:
+                window.location.origin +
+                window.location.pathname.replace(
+                  /[^/]*$/,
+                  "index.html"
+                )
+            }
+          });
+
+          if (error) throw error;
+
+          if (data.session) {
+            window.location.href = "index.html";
+          } else {
+            say(
+              "Account request successful! Email confirmation enabled hai to email check karo."
+            );
+          }
+        } else {
+          const { error } =
+            await client.auth.signInWithPassword({
+              email: email,
+              password: password
+            });
+
+          if (error) throw error;
+
+          window.location.href = "index.html";
+        }
+      } catch (error) {
+        say(error.message || "Kuch galat hua. Dobara try karo.");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>
-
