@@ -336,14 +336,10 @@
         <a href="#home">Home</a>
         <a href="#games">Games</a>
         <a class="optional" href="#features">About</a>
+        <a id="authLink" href="login.html">LOGIN / SIGN UP</a>
+        <span id="userEmail" class="optional" style="color:var(--green);font-size:12px"></span>
+        <button id="logoutBtn" type="button" style="display:none;border:1px solid var(--green);background:transparent;color:var(--green);padding:8px 10px;border-radius:8px;font-weight:700">LOGOUT</button>
       </nav>
-      
-<nav class="nav-links" aria-label="Main navigation">
-  <a href="#home">Home</a>
-  <a href="#games">Games</a>
-  <a class="optional" href="#features">About</a>
-  <a href="login.html">LOGIN / SIGN UP</a>
-</nav>
 
     </div>
   </header>
@@ -456,8 +452,52 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Public publishable key: safe for browser use. Protect data with Supabase RLS.
+    const GAMEZONE_SUPABASE_URL = "https://piruzvmqftjksjrnkvhb.supabase.co";
+    const GAMEZONE_SUPABASE_KEY = "sb_publishable_01DcZheYmg7UCsQdDmXMdQ_mRXAtrus";
+    const gamezoneAuth = window.supabase.createClient(GAMEZONE_SUPABASE_URL, GAMEZONE_SUPABASE_KEY);
+    const authLink = document.getElementById("authLink");
+    const userEmail = document.getElementById("userEmail");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    async function refreshAccountUI() {
+      const { data: { session } } = await gamezoneAuth.auth.getSession();
+      if (session) {
+        authLink.textContent = "MY ACCOUNT";
+        authLink.href = "#account";
+        userEmail.textContent = session.user.email || "Logged in";
+        logoutBtn.style.display = "inline-block";
+      } else {
+        authLink.textContent = "LOGIN / SIGN UP";
+        authLink.href = "login.html";
+        userEmail.textContent = "";
+        logoutBtn.style.display = "none";
+      }
+    }
+    refreshAccountUI();
+
+    logoutBtn.addEventListener("click", async () => {
+      logoutBtn.disabled = true;
+      const { error } = await gamezoneAuth.auth.signOut();
+      if (error) { alert("Logout nahi hua: " + error.message); logoutBtn.disabled = false; return; }
+      window.location.reload();
+    });
+
+    document.querySelectorAll('a[href="gun.html"], a[href="game.html"]').forEach(link => {
+      link.addEventListener("click", async event => {
+        event.preventDefault();
+        const { data: { session } } = await gamezoneAuth.auth.getSession();
+        if (!session) {
+          window.location.href = "login.html";
+          return;
+        }
+        window.location.href = link.getAttribute("href");
+      });
+    });
   </script>
 </body>
 </html>
