@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gamezone | Puzzle Game</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#080d0a;color:#f4fff5;font-family:system-ui,Arial,sans-serif;min-height:100vh;padding:18px}
+main{max-width:520px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;gap:10px}a{color:#53ff75;text-decoration:none}.panel{background:#101a13;border:1px solid #263d2b;border-radius:16px;padding:18px;margin-top:18px}h1{margin:12px 0;color:#53ff75}p{color:#b5c4b7}.stats{display:flex;justify-content:space-between;gap:10px;margin:12px 0}.board{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.tile{aspect-ratio:1;border:0;border-radius:10px;background:#245e32;color:white;font-size:clamp(22px,7vw,34px);font-weight:800;box-shadow:inset 0 -4px #14391e}.tile:focus-visible,button:focus-visible{outline:3px solid #fff}.tile.empty{background:#0b100d;box-shadow:none;border:1px dashed #263d2b}.controls{display:flex;gap:10px;margin-top:15px}.controls button{flex:1;padding:12px;border-radius:10px;border:1px solid #53ff75;background:#53ff75;color:#071109;font-weight:800}.msg{min-height:28px;color:#53ff75;font-weight:700;margin-top:12px}
+</style></head>
+<body><main>
+<div class="top"><a href="index.html">← GAMEZONE</a><span>🧩 PUZZLE</span></div>
+<section class="panel"><h1>Number Puzzle</h1><p>टाइल्स को सही क्रम में लगाओ: 1 से 15 तक। खाली जगह के पास वाली टाइल पर टैप करके उसे खिसकाओ।</p>
+<div class="stats"><span>Moves: <b id="moves">0</b></span><span>Time: <b id="time">0</b>s</span></div>
+<div id="board" class="board" aria-label="Number puzzle board"></div>
+<div class="msg" id="msg" aria-live="polite">शुरू करने के लिए Shuffle दबाओ।</div>
+<div class="controls"><button id="shuffle">Shuffle</button><button id="reset">Restart</button></div></section>
+</main>
+<script>
+(()=>{const board=document.getElementById('board'),movesEl=document.getElementById('moves'),timeEl=document.getElementById('time'),msg=document.getElementById('msg');let tiles=[],moves=0,seconds=0,started=false,tick=null;
+function solved(){return tiles.every((n,i)=>n===(i===15?0:i+1))}
+function neighbors(i){const a=[];if(i%4)a.push(i-1);if(i%4<3)a.push(i+1);if(i>=4)a.push(i-4);if(i<12)a.push(i+4);return a}
+function render(){board.innerHTML='';tiles.forEach((n,i)=>{const b=document.createElement('button');b.className='tile'+(n===0?' empty':'');b.textContent=n||'';b.setAttribute('aria-label',n?'Tile '+n:'Empty space');b.disabled=!n&&solved();b.addEventListener('click',()=>move(i));board.appendChild(b)});movesEl.textContent=moves;timeEl.textContent=seconds}
+function move(i){if(!started||tiles[i]===0)return;const z=tiles.indexOf(0);if(!neighbors(z).includes(i))return;[tiles[z],tiles[i]]=[tiles[i],tiles[z]];moves++;render();if(solved()){started=false;clearInterval(tick);msg.textContent='🎉 जीत गए! '+moves+' moves, '+seconds+' seconds.'}}
+function shuffle(){tiles=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0];for(let k=0;k<250;k++){const z=tiles.indexOf(0),opts=neighbors(z);let i=opts[Math.floor(Math.random()*opts.length)];[tiles[z],tiles[i]]=[tiles[i],tiles[z]]}moves=0;seconds=0;started=true;clearInterval(tick);tick=setInterval(()=>{if(started){seconds++;timeEl.textContent=seconds}},1000);msg.textContent='चलो दोस्त, puzzle solve करो!';render()}
+function reset(){clearInterval(tick);tiles=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0];moves=0;seconds=0;started=false;msg.textContent='शुरू करने के लिए Shuffle दबाओ।';render()}
+document.getElementById('shuffle').addEventListener('click',shuffle);document.getElementById('reset').addEventListener('click',reset);reset();
+})();
+</script></body></html>
